@@ -1,0 +1,13 @@
+# AWTRIX bridge runtime dependencies. Everything else the package imports
+# (argparse, json, logging, os, subprocess, sys, time, datetime, pathlib) is
+# stdlib.
+
+# HTTP to the AWTRIX device and to the Anthropic usage endpoint.
+requests>=2.31.0
+
+# Dexcom Share client. 0.4.0 is the floor: it introduced the `region=`
+# keyword ("us"/"ous"/"jp") that Dexcom._connect() passes.
+pydexcom>=0.4.0
+
+# Loads .env so credentials stay out of the source.
+python-dotenv>=1.0.0

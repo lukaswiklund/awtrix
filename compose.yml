@@ -1,0 +1,30 @@
+services:
+  awtrix:
+    build: .
+    image: awtrix-bridge
+    container_name: awtrix-bridge
+    restart: unless-stopped
+
+    # Must match the owner of ~/.claude/.credentials.json on the host; the file
+    # is 0600, so a mismatched uid means the claude app shows "CC?".
+    user: "1000:1000"
+
+    # Device address and Dexcom credentials. Everything else is hardcoded in
+    # awtrix/config.py.
+    env_file: .env
+
+    environment:
+      # Log timestamps only -- glucose ages are computed from tz-aware values.
+      TZ: Europe/Stockholm
+
+    # Claude Code rotates the OAuth token, so mount the directory rather than
+    # the file: a bind-mounted file would keep pointing at the replaced inode.
+    volumes:
+      - ${HOME}/.claude:/home/app/.claude:ro
+
+    # The bridge reaches the device over the LAN; no ports are published.
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
