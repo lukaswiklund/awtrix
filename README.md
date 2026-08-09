@@ -18,7 +18,8 @@ Pushes three custom apps to an AWTRIX 3 device (Ulanzi TC001):
 ```bash
 python3 -m venv venv
 ./venv/bin/pip install -r requirements.txt
-cp .env.example .env      # then fill in AWTRIX_IP and your Dexcom login
+cp .env.example .env      # then fill in AWTRIX_IP, your Dexcom login, and
+                          # (for Docker) CLAUDE_DIR
 ```
 
 Upload the droplet icons to the device once (or after a reflash):
@@ -45,12 +46,19 @@ docker compose up -d --build
 docker compose logs -f
 ```
 
-The container runs as uid 1000 and mounts `~/.claude` read-only so the Claude
-app can read the OAuth token — if that uid does not own
-`~/.claude/.credentials.json` on the host (it is 0600), adjust `user:` in
-[compose.yml](compose.yml) or the claude app will show `CC?`. `AWTRIX_IP` and
-the Dexcom credentials come from `.env` via `env_file`. Nothing is published; the bridge
-only makes outbound connections to the device on the LAN.
+The container mounts `$CLAUDE_DIR/.claude` read-only so the Claude app can read
+the OAuth token, and runs as uid 1000. Two things make it show `CC?`:
+
+- **`CLAUDE_DIR` unset or wrong.** Set it in `.env` to the home directory
+  holding `.claude`. It is not `$HOME` because `sudo docker compose` resolves
+  that to `/root` and Docker silently mounts an empty `/root/.claude`; compose
+  now refuses to start rather than mount the wrong path.
+- **uid mismatch.** `~/.claude/.credentials.json` is 0600, so if uid 1000 does
+  not own it on the host, adjust `user:` in [compose.yml](compose.yml).
+
+`AWTRIX_IP` and the Dexcom credentials come from `.env` via `env_file`. Nothing
+is published; the bridge only makes outbound connections to the device on the
+LAN.
 
 One-off commands use the same image:
 

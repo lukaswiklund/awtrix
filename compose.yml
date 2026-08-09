@@ -19,8 +19,14 @@ services:
 
     # Claude Code rotates the OAuth token, so mount the directory rather than
     # the file: a bind-mounted file would keep pointing at the replaced inode.
+    #
+    # Not $HOME: under `sudo docker compose` HOME is /root, and Docker would
+    # silently create an empty /root/.claude and mount that -- the claude app
+    # then shows "CC?" with nothing in the logs. CLAUDE_DIR comes from .env,
+    # which compose reads from the project directory regardless of who invokes
+    # it, and `:?` turns a missing value into a loud error instead.
     volumes:
-      - ${HOME}/.claude:/home/app/.claude:ro
+      - ${CLAUDE_DIR:?set CLAUDE_DIR in .env to the home dir holding .claude}/.claude:/home/app/.claude:ro
 
     # The bridge reaches the device over the LAN; no ports are published.
     logging:
