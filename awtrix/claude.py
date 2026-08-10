@@ -20,6 +20,7 @@ from .config import (
     COLORS,
     CREDS_FILE,
     CREDS_KEYCHAIN,
+    USAGE_BACKOFF_MAX,
     USAGE_POLL,
     USAGE_URL,
     log,
@@ -68,12 +69,30 @@ def iso_to_epoch(value) -> float | None:
         return None
 
 
-def fetch_usage() -> dict | None:
-    """Percent of each plan limit, straight from the account endpoint."""
+def retry_after(response) -> float | None:
+    """Seconds the server asked us to wait, from a 429's Retry-After header.
+
+    The HTTP-date form is legal but this endpoint sends plain seconds; an
+    unparseable value just falls back to the caller's own backoff.
+    """
+    if response is None:
+        return None
+    try:
+        return max(0.0, float(response.headers.get("Retry-After")))
+    except (TypeError, ValueError):
+        return None
+
+
+def fetch_usage() -> tuple[dict | None, float | None]:
+    """Percent of each plan limit, straight from the account endpoint.
+
+    Returns (windows, wait): windows is None on any failure, and wait is the
+    delay the server asked for, when it asked for one.
+    """
     token = oauth_token()
     if not token:
         log.warning("no OAuth token found; is Claude Code logged in?")
-        return None
+        return None, None
 
     try:
         r = requests.get(
@@ -88,7 +107,7 @@ def fetch_usage() -> dict | None:
         body = r.json()
     except (requests.RequestException, ValueError) as e:
         log.warning("usage fetch failed: %s", e)
-        return None
+        return None, retry_after(getattr(e, "response", None))
 
     # The windows used to sit under "utilization"; they are top-level now, and
     # the old key still exists with a null value. Accept either shape.
@@ -108,11 +127,13 @@ def fetch_usage() -> dict | None:
         # 200 but nothing we recognise -- the endpoint is internal and may
         # have been reshaped. Log the keys so it's obvious what moved.
         log.warning("usage response had no known windows; keys=%s", list(util)[:8])
-        return None
-    return windows
+        return None, None
+    return windows, None
 
 
-_poll: dict = {"at": 0.0, "data": None}
+# "wait" is the gap until the next poll: USAGE_POLL while things work, growing
+# while they don't. Zero so the first call polls immediately.
+_poll: dict = {"at": 0.0, "wait": 0.0, "data": None}
 
 
 def claude_usage() -> dict | None:
@@ -122,10 +143,21 @@ def claude_usage() -> dict | None:
     the endpoint each time -- resets_at is absolute, so it stays correct.
     """
     now = time.time()
-    if now - _poll["at"] >= USAGE_POLL:
-        fresh = fetch_usage()
+    if now - _poll["at"] >= _poll["wait"]:
+        fresh, asked = fetch_usage()
+
+        # Record the attempt whether or not it worked. Advancing "at" only on
+        # success leaves the gate permanently open, and the caller polls once a
+        # minute -- so a single 429 became a 60s retry loop that kept renewing
+        # the rate limit it was waiting out.
+        _poll["at"] = now
+
         if fresh:
-            _poll.update(at=now, data=fresh)
+            _poll.update(wait=USAGE_POLL, data=fresh)
+        else:
+            backoff = _poll["wait"] * 2 if _poll["wait"] else USAGE_POLL
+            _poll["wait"] = min(max(backoff, asked or 0.0), USAGE_BACKOFF_MAX)
+            log.info("retrying usage in %ds", _poll["wait"])
 
     if not _poll["data"]:
         return None

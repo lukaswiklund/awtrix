@@ -84,6 +84,11 @@ triggers a keychain prompt; elsewhere from `~/.claude/.credentials.json`. That
 endpoint is internal and undocumented: if it changes shape the `claude` app
 falls back to showing `CC?` and `claudew` disappears.
 
+It is polled every `USAGE_POLL` seconds and rate-limited by Anthropic, shared
+with Claude Code's own polling. A failed poll doubles the gap (honouring
+`Retry-After`) up to `USAGE_BACKOFF_MAX`, so a `429` clears itself instead of
+being renewed by the retries; the last good numbers stay on screen meanwhile.
+
 The two windows get their own frames rather than sharing one: `24% 2h13 19%w`
 runs past the 32px display and scrolls, so the 5h percent ends up off-screen
 half the time.

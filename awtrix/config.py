@@ -52,6 +52,12 @@ STALE_AFTER = 900                                          # 15 min
 # if it ever changes shape the app falls back to showing "CC?".
 USAGE_URL = "https://api.anthropic.com/api/oauth/usage"
 USAGE_POLL = 300
+# The endpoint is rate-limited and shared with Claude Code itself, so a failed
+# poll waits longer each time (doubling from USAGE_POLL) instead of retrying at
+# the normal cadence -- asking again every five minutes is how a 429 stays a
+# 429. A success resets it. Capped so a transient outage still recovers within
+# the hour without a restart.
+USAGE_BACKOFF_MAX = 3600
 CREDS_KEYCHAIN = "Claude Code-credentials"
 CREDS_FILE = os.path.expanduser("~/.claude/.credentials.json")
 CLAUDE_INTERVAL = 60
