@@ -188,12 +188,16 @@ def fmt_until(resets_at) -> str | None:
     return f"{mins}m"
 
 
-def _window_app(window: dict, suffix: str = "") -> dict:
-    """One window as an app payload: percent, time to reset, progress bar."""
+def _window_app(window: dict) -> dict:
+    """One window as an app payload: percent, time to reset, progress bar.
+
+    Both windows render identically -- the 32px screen has no room for a label
+    to tell them apart, so they are distinguished by which app slot they're in.
+    """
     pct = max(0, min(100, round(window["pct"])))
     bar_colour = "#00E000" if pct < 60 else "#FFD000" if pct < 85 else "#FF3030"
 
-    text = [{"t": f"{pct}%{suffix}", "c": bar_colour.lstrip("#")}]
+    text = [{"t": f"{pct}%", "c": bar_colour.lstrip("#")}]
     until = fmt_until(window.get("resets_at"))
     if until:
         text.append({"t": f" {until}", "c": "808080"})
@@ -227,11 +231,11 @@ def render_claude(usage) -> dict:
 
 
 def render_claude_week(usage) -> dict | None:
-    """The 7-day window, marked with a trailing "w".
+    """The 7-day window.
 
     None when the endpoint returned no weekly window -- the caller pushes that
     as a delete, so the frame disappears instead of freezing on an old number.
     """
     if not usage or "seven_day" not in usage:
         return None
-    return _window_app(usage["seven_day"], suffix="w")
+    return _window_app(usage["seven_day"])

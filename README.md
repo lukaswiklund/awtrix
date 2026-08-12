@@ -6,7 +6,7 @@ Pushes three custom apps to an AWTRIX 3 device (Ulanzi TC001):
 | --------- | ----------------------------------------------------- |
 | `bg`      | current Dexcom G7 glucose + trend arrow, colour-coded |
 | `claude`  | Claude usage: percent of the 5h window, time to reset |
-| `claudew` | the same for the 7-day window, marked with a `w`      |
+| `claudew` | the same for the 7-day window                         |
 
 > **Not a medical device.** Dexcom Share is an undocumented API, readings lag
 > the sensor by several minutes, and this bridge can silently stall. Do not

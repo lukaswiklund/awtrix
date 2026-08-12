@@ -31,7 +31,7 @@ def selftest() -> None:
                                    {"t": " 2h13", "c": "808080"}],
                           "textCase": 2, "progress": 24,
                           "progressC": "#00E000", "progressBC": "#202020"})
-    push_app(CLAUDE_WEEK_APP, {"text": [{"t": "67%w", "c": "FFD000"},
+    push_app(CLAUDE_WEEK_APP, {"text": [{"t": "67%", "c": "FFD000"},
                                         {"t": " 3d", "c": "808080"}],
                                "textCase": 2, "progress": 67,
                                "progressC": "#FFD000", "progressBC": "#202020"})
