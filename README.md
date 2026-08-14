@@ -1,12 +1,13 @@
 # awtrix
 
-Pushes three custom apps to an AWTRIX 3 device (Ulanzi TC001):
+Pushes four custom apps to an AWTRIX 3 device (Ulanzi TC001):
 
 | app       | shows                                                 |
 | --------- | ----------------------------------------------------- |
 | `bg`      | current Dexcom G7 glucose + trend arrow, colour-coded |
 | `claude`  | Claude usage: percent of the 5h window, time to reset |
-| `claudew` | the same for the 7-day window                         |
+| `claudew` | the same for the 7-day all-models window              |
+| `claudef` | the same for the 7-day Fable window                   |
 
 > **Not a medical device.** Dexcom Share is an undocumented API, readings lag
 > the sensor by several minutes, and this bridge can silently stall. Do not
@@ -77,21 +78,24 @@ to change behaviour.
 
 ## Claude usage
 
-The `claude` and `claudew` apps read your subscription limits (the percentages
-`/usage` shows) from Anthropic's account endpoint, reusing the OAuth token
-Claude Code already stores — on macOS in the login keychain, so the first run
-triggers a keychain prompt; elsewhere from `~/.claude/.credentials.json`. That
-endpoint is internal and undocumented: if it changes shape the `claude` app
-falls back to showing `CC?` and `claudew` disappears.
+The `claude`, `claudew` and `claudef` apps read your subscription limits (the
+percentages `/usage` shows) from Anthropic's account endpoint, reusing the
+OAuth token Claude Code already stores — on macOS in the login keychain, so the
+first run triggers a keychain prompt; elsewhere from
+`~/.claude/.credentials.json`. That endpoint is internal and undocumented: if
+it changes shape the `claude` app falls back to showing `CC?` and the other two
+disappear.
 
 It is polled every `USAGE_POLL` seconds and rate-limited by Anthropic, shared
 with Claude Code's own polling. A failed poll doubles the gap (honouring
 `Retry-After`) up to `USAGE_BACKOFF_MAX`, so a `429` clears itself instead of
 being renewed by the retries; the last good numbers stay on screen meanwhile.
 
-The two windows get their own frames rather than sharing one: `24% 2h13 19%w`
-runs past the 32px display and scrolls, so the 5h percent ends up off-screen
-half the time.
+Each window gets its own frame rather than sharing one: `24% 2h13 19%w` runs
+past the 32px display and scrolls, so the 5h percent ends up off-screen half
+the time. The frames otherwise look identical, so the percent's colour says
+which window is showing — white for the 5h, blue for the 7-day, orange for
+Fable — while the progress bar keeps the green/yellow/red severity colour.
 
 ## Layout
 

@@ -7,12 +7,13 @@ import logging
 import sys
 import time
 
-from .claude import claude_usage, render_claude, render_claude_week
+from .claude import claude_usage, render_claude, render_claude_fable, render_claude_week
 from .config import (
     AWTRIX_IP,
     BG_ICONS,
     BG_INTERVAL,
     CLAUDE_APP,
+    CLAUDE_FABLE_APP,
     CLAUDE_INTERVAL,
     CLAUDE_WEEK_APP,
     log,
@@ -27,14 +28,18 @@ def selftest() -> None:
     log.info("pushing dummy apps to %s", AWTRIX_IP)
     push_app("bg", {"text": [{"t": "5.4", "c": "00E000"}, {"t": "/", "c": "00E000"}],
                     "icon": BG_ICONS["in_range"], "textCase": 2, "center": True})
-    push_app(CLAUDE_APP, {"text": [{"t": "24%", "c": "00E000"},
+    push_app(CLAUDE_APP, {"text": [{"t": "24%", "c": "FFFFFF"},
                                    {"t": " 2h13", "c": "808080"}],
                           "textCase": 2, "progress": 24,
                           "progressC": "#00E000", "progressBC": "#202020"})
-    push_app(CLAUDE_WEEK_APP, {"text": [{"t": "67%", "c": "FFD000"},
+    push_app(CLAUDE_WEEK_APP, {"text": [{"t": "67%", "c": "00A0FF"},
                                         {"t": " 3d", "c": "808080"}],
                                "textCase": 2, "progress": 67,
                                "progressC": "#FFD000", "progressBC": "#202020"})
+    push_app(CLAUDE_FABLE_APP, {"text": [{"t": "12%", "c": "FF8000"},
+                                         {"t": " 3d", "c": "808080"}],
+                                "textCase": 2, "progress": 12,
+                                "progressC": "#00E000", "progressBC": "#202020"})
     log.info("done — check the device")
 
 
@@ -60,6 +65,7 @@ def run(once: bool = False) -> None:
             usage = claude_usage()
             push_app(CLAUDE_APP, render_claude(usage))
             push_app(CLAUDE_WEEK_APP, render_claude_week(usage))
+            push_app(CLAUDE_FABLE_APP, render_claude_fable(usage))
             next_claude = now + CLAUDE_INTERVAL
 
         if once:

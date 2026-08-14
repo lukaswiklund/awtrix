@@ -61,11 +61,21 @@ USAGE_BACKOFF_MAX = 3600
 CREDS_KEYCHAIN = "Claude Code-credentials"
 CREDS_FILE = os.path.expanduser("~/.claude/.credentials.json")
 CLAUDE_INTERVAL = 60
-# Two apps rather than one: "24% 2h13 19%w" runs past 32px and scrolls, which
-# leaves the 5h percent off-screen half the time. The device cycles frames
-# anyway, so each window gets its own.
+# One app per window rather than one combined: "24% 2h13 19%w" runs past 32px
+# and scrolls, which leaves the 5h percent off-screen half the time. The device
+# cycles frames anyway, so each window gets its own.
 CLAUDE_APP = "claude"
 CLAUDE_WEEK_APP = "claudew"
+CLAUDE_FABLE_APP = "claudef"
+
+# The frames look identical and 32px leaves no room for a label, so the
+# percent's colour names the window instead: white = 5h, blue = 7-day (all
+# models), orange = 7-day Fable. Severity stays on the progress bar.
+CLAUDE_WINDOW_COLORS = {
+    "five_hour": "#FFFFFF",
+    "seven_day": "#00A0FF",
+    "fable": "#FF8000",
+}
 
 # ------------------------------------------------------- icons and colours ----
 
