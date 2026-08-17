@@ -1,0 +1,7 @@
+[Unit]
+Description=Refresh Claude Code OAuth token for the awtrix bridge
+
+[Service]
+Type=oneshot
+# Adjust if the repo lives elsewhere; %h is the user's home.
+ExecStart=%h/code/awtrix/scripts/refresh-claude-token.sh

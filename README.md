@@ -48,7 +48,7 @@ docker compose logs -f
 ```
 
 The container mounts `$CLAUDE_DIR/.claude` read-only so the Claude app can read
-the OAuth token, and runs as uid 1000. Two things make it show `CC?`:
+the OAuth token, and runs as uid 1000. Three things make it show `CC?`:
 
 - **`CLAUDE_DIR` unset or wrong.** Set it in `.env` to the home directory
   holding `.claude`. It is not `$HOME` because `sudo docker compose` resolves
@@ -56,6 +56,22 @@ the OAuth token, and runs as uid 1000. Two things make it show `CC?`:
   now refuses to start rather than mount the wrong path.
 - **uid mismatch.** `~/.claude/.credentials.json` is 0600, so if uid 1000 does
   not own it on the host, adjust `user:` in [compose.yml](compose.yml).
+- **Token expired.** Claude Code only rotates the token while it is running,
+  so after a quiet evening `.credentials.json` holds an expired `accessToken`
+  and the endpoint returns 401 until the next `claude` session. On the machine
+  that owns `CLAUDE_DIR`, install the timer that runs a trivial `claude -p`
+  whenever the token is expired or has under 30 minutes left:
+
+  ```bash
+  cp scripts/systemd/claude-token-refresh.* ~/.config/systemd/user/
+  systemctl --user daemon-reload
+  systemctl --user enable --now claude-token-refresh.timer
+  loginctl enable-linger $USER   # keep user timers running when logged out
+  ```
+
+  Adjust `ExecStart` in the service if the repo is not at `~/code/awtrix`.
+  Check with `systemctl --user list-timers` and
+  `journalctl --user -u claude-token-refresh`.
 
 `AWTRIX_IP` and the Dexcom credentials come from `.env` via `env_file`. Nothing
 is published; the bridge only makes outbound connections to the device on the
