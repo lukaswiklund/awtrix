@@ -77,6 +77,26 @@ CLAUDE_WINDOW_COLORS = {
     "fable": "#FF8000",
 }
 
+# ------------------------------------------------------------------- codex ----
+
+# Codex exposes ChatGPT plan usage through its supported local app-server
+# protocol. The CLI owns OAuth refresh and reads ~/.codex/auth.json, so the
+# bridge never handles the token itself.
+CODEX_COMMAND = "codex"
+CODEX_USAGE_POLL = 300
+CODEX_USAGE_BACKOFF_MAX = 3600
+CODEX_RPC_TIMEOUT = 15
+CODEX_INTERVAL = 60
+CODEX_APP = "codex"
+CODEX_WEEK_APP = "codexw"
+
+# Codex windows are green/purple so they remain distinguishable from Claude's
+# otherwise identical white/blue frames on a 32px display.
+CODEX_WINDOW_COLORS = {
+    "short": "#10A37F",
+    "week": "#A970FF",
+}
+
 # ------------------------------------------------------- icons and colours ----
 
 # 8x8 droplets on the device's /ICONS, one per range. Keys match COLORS.
@@ -91,6 +111,7 @@ BG_ICONS = {
 }
 BG_ICON = None
 CLAUDE_ICON = None
+CODEX_ICON = None
 
 COLORS = {
     "urgent_low": "#FF0000",

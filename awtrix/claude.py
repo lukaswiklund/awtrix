@@ -233,7 +233,7 @@ def _window_app(window: dict, key: str) -> dict:
     return payload
 
 
-def render_claude(usage) -> dict:
+def render_claude(usage) -> dict | None:
     """The 5-hour window. Falls back to "CC?" so a failure stays visible."""
     if not usage or "five_hour" not in usage:
         return {
@@ -243,6 +243,8 @@ def render_claude(usage) -> dict:
             "lifetime": 3600,
             "lifetimeMode": 0,
         }
+    if round(usage["five_hour"]["pct"]) <= 0:
+        return None
     return _window_app(usage["five_hour"], "five_hour")
 
 
@@ -254,11 +256,15 @@ def render_claude_week(usage) -> dict | None:
     """
     if not usage or "seven_day" not in usage:
         return None
+    if round(usage["seven_day"]["pct"]) <= 0:
+        return None
     return _window_app(usage["seven_day"], "seven_day")
 
 
 def render_claude_fable(usage) -> dict | None:
     """The 7-day Fable window. None-as-delete, like the weekly frame."""
     if not usage or "fable" not in usage:
+        return None
+    if round(usage["fable"]["pct"]) <= 0:
         return None
     return _window_app(usage["fable"], "fable")

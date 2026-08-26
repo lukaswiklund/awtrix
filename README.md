@@ -1,6 +1,6 @@
 # awtrix
 
-Pushes four custom apps to an AWTRIX 3 device (Ulanzi TC001):
+Pushes custom apps to an AWTRIX 3 device (Ulanzi TC001):
 
 | app       | shows                                                 |
 | --------- | ----------------------------------------------------- |
@@ -8,6 +8,8 @@ Pushes four custom apps to an AWTRIX 3 device (Ulanzi TC001):
 | `claude`  | Claude usage: percent of the 5h window, time to reset |
 | `claudew` | the same for the 7-day all-models window              |
 | `claudef` | the same for the 7-day Fable window                   |
+| `codex`   | Codex usage for the short rolling window              |
+| `codexw`  | Codex usage for the weekly window                     |
 
 > **Not a medical device.** Dexcom Share is an undocumented API, readings lag
 > the sensor by several minutes, and this bridge can silently stall. Do not
@@ -20,7 +22,7 @@ Pushes four custom apps to an AWTRIX 3 device (Ulanzi TC001):
 python3 -m venv venv
 ./venv/bin/pip install -r requirements.txt
 cp .env.example .env      # then fill in AWTRIX_IP, your Dexcom login, and
-                          # (for Docker) CLAUDE_DIR
+                          # (for Docker) CLAUDE_DIR and CODEX_DIR
 ```
 
 Upload the droplet icons to the device once (or after a reflash):
@@ -47,8 +49,9 @@ docker compose up -d --build
 docker compose logs -f
 ```
 
-The container mounts `$CLAUDE_DIR/.claude` read-only so the Claude app can read
-the OAuth token, and runs as uid 1000. Three things make it show `CC?`:
+The container mounts `$CLAUDE_DIR/.claude` read-only for Claude and
+`$CODEX_DIR/.codex` read-write for Codex, and runs as uid 1000. Three things
+make the Claude frame show `CC?`:
 
 - **`CLAUDE_DIR` unset or wrong.** Set it in `.env` to the home directory
   holding `.claude`. It is not `$HOME` because `sudo docker compose` resolves
@@ -76,6 +79,10 @@ the OAuth token, and runs as uid 1000. Three things make it show `CC?`:
 `AWTRIX_IP` and the Dexcom credentials come from `.env` via `env_file`. Nothing
 is published; the bridge only makes outbound connections to the device on the
 LAN.
+
+The Codex mount must be writable because the Codex CLI owns OAuth refresh and
+atomically replaces `auth.json`. Set `CODEX_DIR` to the home directory where
+`codex login` was run. A missing CLI/login or unreadable mount shows `CX?`.
 
 One-off commands use the same image:
 
@@ -113,6 +120,24 @@ the time. The frames otherwise look identical, so the percent's colour says
 which window is showing — white for the 5h, blue for the 7-day, orange for
 Fable — while the progress bar keeps the green/yellow/red severity colour.
 
+## Codex usage
+
+The `codex` and `codexw` apps ask the local
+[Codex app server](https://developers.openai.com/codex/app-server) for the
+ChatGPT rate-limit windows. This is the supported interface used by Codex
+clients; the bridge does not parse or send the OAuth token itself. It
+identifies short and weekly windows from their reported durations, since some
+plans expose only one window. Missing windows disappear instead of leaving
+stale values behind.
+
+Codex usage is polled every five minutes with exponential backoff on failures,
+while the countdown is refreshed every minute from cached reset timestamps.
+Green percent text identifies the short window and purple identifies weekly;
+the progress bar still uses green/yellow/red for utilization severity.
+
+Usage frames whose displayed utilization is `0%` are removed until usage rises
+above zero. Fetch failures remain visible as `CC?` or `CX?` error frames.
+
 ## Layout
 
 ```text
@@ -121,6 +146,7 @@ awtrix/
   transport.py  HTTP to the device (push_app / notify / indicator)
   dexcom.py     Share client, bg payload, urgent-low alarm
   claude.py     OAuth token, usage endpoint, claude payload
+  codex.py      Codex app-server client, usage cache, codex payload
   icons.py      icon upload
   cli.py        argument parsing and the poll loop
 icons/          8x8 droplet icons, one per glucose range

@@ -5,8 +5,8 @@ services:
     container_name: awtrix-bridge
     restart: unless-stopped
 
-    # Must match the owner of ~/.claude/.credentials.json on the host; the file
-    # is 0600, so a mismatched uid means the claude app shows "CC?".
+    # Must match the owner of the Claude and Codex credential directories on
+    # the host; a mismatch makes their usage apps show an error frame.
     user: "1000:1000"
 
     # Device address and Dexcom credentials. Everything else is hardcoded in
@@ -27,6 +27,9 @@ services:
     # it, and `:?` turns a missing value into a loud error instead.
     volumes:
       - ${CLAUDE_DIR:?set CLAUDE_DIR in .env to the home dir holding .claude}/.claude:/home/app/.claude:ro
+      # Codex refreshes and atomically replaces auth.json, so mount its
+      # directory read-write rather than bind-mounting that one file.
+      - ${CODEX_DIR:?set CODEX_DIR in .env to the home dir holding .codex}/.codex:/home/app/.codex
 
     # The bridge reaches the device over the LAN; no ports are published.
     logging:

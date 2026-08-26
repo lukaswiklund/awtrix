@@ -8,6 +8,7 @@ import sys
 import time
 
 from .claude import claude_usage, render_claude, render_claude_fable, render_claude_week
+from .codex import codex_usage, render_codex, render_codex_week
 from .config import (
     AWTRIX_IP,
     BG_ICONS,
@@ -16,6 +17,9 @@ from .config import (
     CLAUDE_FABLE_APP,
     CLAUDE_INTERVAL,
     CLAUDE_WEEK_APP,
+    CODEX_APP,
+    CODEX_INTERVAL,
+    CODEX_WEEK_APP,
     log,
 )
 from .dexcom import Dexcom, check_alarm, render_bg
@@ -40,6 +44,14 @@ def selftest() -> None:
                                          {"t": " 3d", "c": "808080"}],
                                 "textCase": 2, "progress": 12,
                                 "progressC": "#00E000", "progressBC": "#202020"})
+    push_app(CODEX_APP, {"text": [{"t": "31%", "c": "10A37F"},
+                                  {"t": " 1h42", "c": "808080"}],
+                         "textCase": 2, "progress": 31,
+                         "progressC": "#00E000", "progressBC": "#202020"})
+    push_app(CODEX_WEEK_APP, {"text": [{"t": "58%", "c": "A970FF"},
+                                       {"t": " 4d", "c": "808080"}],
+                              "textCase": 2, "progress": 58,
+                              "progressC": "#00E000", "progressBC": "#202020"})
     log.info("done — check the device")
 
 
@@ -48,6 +60,7 @@ def run(once: bool = False) -> None:
     state: dict = {}
     next_bg = 0.0
     next_claude = 0.0
+    next_codex = 0.0
 
     # Older versions pushed a sparkline app; drop it so it doesn't linger.
     push_app("bgtrend", None)
@@ -68,6 +81,12 @@ def run(once: bool = False) -> None:
             push_app(CLAUDE_FABLE_APP, render_claude_fable(usage))
             next_claude = now + CLAUDE_INTERVAL
 
+        if now >= next_codex:
+            usage = codex_usage()
+            push_app(CODEX_APP, render_codex(usage))
+            push_app(CODEX_WEEK_APP, render_codex_week(usage))
+            next_codex = now + CODEX_INTERVAL
+
         if once:
             return
 
@@ -77,7 +96,7 @@ def run(once: bool = False) -> None:
 def main() -> None:
     ap = argparse.ArgumentParser(
         prog="awtrix",
-        description="Bridge Dexcom G7 glucose and Claude plan usage to an AWTRIX 3.",
+        description="Bridge Dexcom G7 glucose and Claude/Codex plan usage to an AWTRIX 3.",
     )
     ap.add_argument("--once", action="store_true", help="single pass then exit")
     ap.add_argument("--selftest", action="store_true", help="push dummy values")
