@@ -6,7 +6,7 @@ services:
     restart: unless-stopped
 
     # Must match the owner of the Claude and Codex credential directories on
-    # the host; a mismatch makes their usage apps show an error frame.
+    # the host; a mismatch prevents their usage apps from loading data.
     user: "1000:1000"
 
     # Device address and Dexcom credentials. Everything else is hardcoded in
@@ -22,7 +22,7 @@ services:
     #
     # Not $HOME: under `sudo docker compose` HOME is /root, and Docker would
     # silently create an empty /root/.claude and mount that -- the claude app
-    # then shows "CC?" with nothing in the logs. CLAUDE_DIR comes from .env,
+    # then disappears without cached usage. CLAUDE_DIR comes from .env,
     # which compose reads from the project directory regardless of who invokes
     # it, and `:?` turns a missing value into a loud error instead.
     volumes:

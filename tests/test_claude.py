@@ -15,8 +15,10 @@ class ClaudeUsageTests(unittest.TestCase):
         self.assertIsNone(render_claude_week(usage))
         self.assertIsNone(render_claude_fable(usage))
 
-    def test_fetch_failure_still_has_visible_error_frame(self):
-        self.assertEqual(render_claude(None)["text"], "CC?")
+    def test_unavailable_five_hour_window_is_deleted(self):
+        for usage in (None, {}, {"seven_day": {"pct": 25, "resets_at": None}}):
+            with self.subTest(usage=usage):
+                self.assertIsNone(render_claude(usage))
 
 
 if __name__ == "__main__":

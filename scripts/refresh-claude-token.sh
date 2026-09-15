@@ -3,7 +3,7 @@
 #
 # Claude Code only rotates ~/.claude/.credentials.json while it is running, so a
 # quiet evening leaves the file holding an expired accessToken and the claude
-# apps stuck on "CC?" (401) until the next session. This runs a trivial
+# usage requests failing with 401 until the next session. This runs a trivial
 # `claude -p` when the token is expired or about to be, which makes Claude Code
 # refresh and rewrite the file. Meant for a timer; see README.
 set -euo pipefail

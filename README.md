@@ -51,7 +51,7 @@ docker compose logs -f
 
 The container mounts `$CLAUDE_DIR/.claude` read-only for Claude and
 `$CODEX_DIR/.codex` read-write for Codex, and runs as uid 1000. Three things
-make the Claude frame show `CC?`:
+can prevent Claude usage from loading (the frame is removed if no cached usage is available):
 
 - **`CLAUDE_DIR` unset or wrong.** Set it in `.env` to the home directory
   holding `.claude`. It is not `$HOME` because `sudo docker compose` resolves
@@ -106,8 +106,7 @@ percentages `/usage` shows) from Anthropic's account endpoint, reusing the
 OAuth token Claude Code already stores — on macOS in the login keychain, so the
 first run triggers a keychain prompt; elsewhere from
 `~/.claude/.credentials.json`. That endpoint is internal and undocumented: if
-it changes shape the `claude` app falls back to showing `CC?` and the other two
-disappear.
+it changes shape and no cached usage is available, the Claude apps disappear.
 
 It is polled every `USAGE_POLL` seconds and rate-limited by Anthropic, shared
 with Claude Code's own polling. A failed poll doubles the gap (honouring
@@ -136,7 +135,8 @@ Green percent text identifies the short window and purple identifies weekly;
 the progress bar still uses green/yellow/red for utilization severity.
 
 Usage frames whose displayed utilization is `0%` are removed until usage rises
-above zero. Fetch failures remain visible as `CC?` or `CX?` error frames.
+above zero. Without cached usage, Claude fetch failures remove the apps and
+Codex fetch failures show a `CX?` error frame.
 
 ## Layout
 

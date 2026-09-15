@@ -49,7 +49,7 @@ STALE_AFTER = 900                                          # 15 min
 # Plan usage comes from the account endpoint Claude Code itself calls to fill
 # `cachedUsageUtilization` in ~/.claude.json, authenticated with the OAuth
 # token Claude Code stores in the login keychain. Undocumented and internal:
-# if it ever changes shape the app falls back to showing "CC?".
+# unavailable usage removes the app when there is no cached data.
 USAGE_URL = "https://api.anthropic.com/api/oauth/usage"
 USAGE_POLL = 300
 # The endpoint is rate-limited and shared with Claude Code itself, so a failed
