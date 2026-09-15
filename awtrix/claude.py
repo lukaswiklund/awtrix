@@ -18,7 +18,6 @@ from .config import (
     CLAUDE_ICON,
     CLAUDE_INTERVAL,
     CLAUDE_WINDOW_COLORS,
-    COLORS,
     CREDS_FILE,
     CREDS_KEYCHAIN,
     USAGE_BACKOFF_MAX,
@@ -234,15 +233,9 @@ def _window_app(window: dict, key: str) -> dict:
 
 
 def render_claude(usage) -> dict | None:
-    """The 5-hour window. Falls back to "CC?" so a failure stays visible."""
+    """The 5-hour window, deleted when usage is unavailable."""
     if not usage or "five_hour" not in usage:
-        return {
-            "text": "CC?",
-            "color": COLORS["error"],
-            "textCase": 2,
-            "lifetime": 3600,
-            "lifetimeMode": 0,
-        }
+        return None
     if round(usage["five_hour"]["pct"]) <= 0:
         return None
     return _window_app(usage["five_hour"], "five_hour")
